@@ -1,0 +1,28 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "henrik.gustavsson@his.se",
+    "longName": "PIPRS - Pipe Layers Game",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/MPRS_II.png",
+                "name": "IMAGE_NO_LITTER",
+                "type": "png"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "PIPRS",
+    "targetPlatforms": [
+        "basalt"
+    ],
+    "uuid": "5a80698a-909c-427b-b070-be960864184d",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
