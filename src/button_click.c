@@ -22,7 +22,7 @@ int level=0;
 // Bitmap garbage collection
 int bitmapcnt=0;
 
-// Garbage collected sprite creation
+// Garbage collected sprite creation (reference counter only)
 static GBitmap* makeSprite(const GBitmap * base_bitmap, GRect sub_rect)
 {
 	bitmapcnt++;
