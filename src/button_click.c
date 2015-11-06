@@ -22,6 +22,11 @@ int level=0;
 // Bitmap garbage collection
 int bitmapcnt=0;
 
+// Animation Timer
+AppTimer *timer;
+const int delta = 250;
+static int xxx=0;
+
 // Garbage collected sprite creation (reference counter only)
 static GBitmap* makeSprite(const GBitmap * base_bitmap, GRect sub_rect)
 {
@@ -40,7 +45,28 @@ static int comparescore()
 		return (scored>scorel);
 }
 
+//---------------------------------------------------------------------------------//
+// timer_callback
+//---------------------------------------------------------------------------------//
+// Called when the graphics need to be updated
+//---------------------------------------------------------------------------------//
+
+void timer_callback(void *data) {
+		// Movement!
+		xxx++;
+	
+	  layer_mark_dirty(s_image_layer);
+
+    //Register next execution
+    timer = app_timer_register(delta, (AppTimerCallback) timer_callback, NULL);
+}
+
+//---------------------------------------------------------------------------------//
+// initGameBoard
+//---------------------------------------------------------------------------------//
 // Clear playfield and init scoreboard
+//---------------------------------------------------------------------------------//
+
 static void initGameBoard()
 {
 	// Read High Score.... from persistent storage (or clear it)
@@ -217,6 +243,10 @@ static void click_config_provider(void *context) {
 // Called when the graphics need to be updated
 //---------------------------------------------------------------------------------//
 
+//  graphics_context_set_compositing_mode(ctx, GCompOpSet);
+//  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+//  graphics_draw_bitmap_in_rect(ctx, s_bitmap, gbitmap_get_bounds(s_bitmap));
+
 static void layer_update_callback(Layer *layer, GContext* ctx) {
 	
 	if(state==0){
@@ -298,7 +328,7 @@ static void main_window_load(Window *window) {
   s_image_layer = layer_create(bounds);
   layer_set_update_proc(s_image_layer, layer_update_callback);
   layer_add_child(window_layer, s_image_layer);
-
+		
 	// Define bitmap
   s_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NO_LITTER);
 
@@ -315,15 +345,22 @@ static void main_window_load(Window *window) {
 	// Prepare for new game
 	state=0;
 	initGameBoard();
+	
+	// Prepare Timer
+	timer = app_timer_register(delta, (AppTimerCallback) timer_callback, NULL);
 
 }
 
 static void main_window_unload(Window *window) {
+	
+	//Cancel timer
+	app_timer_cancel(timer);
+	
 	// Deallocate tiles
 	for(int i=0;i<bitmapcnt;i++){
 			 gbitmap_destroy(t_image[i]);
 	}
-	
+		
 	// Deallocate bitmap
  	gbitmap_destroy(s_image);
 	
