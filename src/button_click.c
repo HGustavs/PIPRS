@@ -42,20 +42,20 @@ int bitmapcnt=0;
 AppTimer *timer;
 const int delta = 500;
 
-#define starttile 73
+#define starttile 13
 
 // Tile redirection array (do not morph 0, normal tiles start at 1)
 static int redirect_tile[81] = { 0, 
-															  1,  9, 17, 25,  1, 33, 41, 25,			// Vertical
-															  2, 10, 18, 26,  2, 34, 42, 26,			// Horizontal
-																3, 11, 19, 27,  3, 35, 43, 27,      // Bottom Right
-																4, 12, 20, 28,  4, 36, 44, 28,      // Bottom Left
-																5, 13, 21, 29,  5, 37, 45, 29,      // Top Right
-																6, 14, 22, 30,  6, 38, 46, 30,      // Top Left
-																7, 15, 23, 31,  7, 39, 47, 31,      // Crossing Left To Right Empty Vert
-															 54, 51, 59, 61, 54, 52, 60, 61,      // Crossing Left to Right Full Vert
-															  7, 63, 63, 54,  7, 55, 55, 54,      // Crossing Top to Bottom Empty Horizontal
-															 31, 53, 53, 61, 31, 62, 62, 61       // Crossing Top to Bottom Full Horizontal
+															  1,  9, 17, 25,  1, 33, 41, 25,			// Vertical (1-4) (5-8)
+															  2, 10, 18, 26,  2, 34, 42, 26,			// Horizontal (9-12) (13-16)
+																3, 11, 19, 27,  3, 35, 43, 27,      // Bottom Right (17-20) (21-24)
+																4, 12, 20, 28,  4, 36, 44, 28,      // Bottom Left (25-28) (29-32)
+																5, 13, 21, 29,  5, 37, 45, 29,      // Top Right (33-36) (37-40)
+																6, 14, 22, 30,  6, 38, 46, 30,      // Top Left (41-44) (46-48)
+																7, 15, 23, 31,  7, 39, 47, 31,      // Crossing Left To Right Empty Vert (49-52) (53-56)
+															 54, 51, 59, 61, 54, 52, 60, 61,      // Crossing Left to Right Full Vert (57-60) (61-64)
+															  7, 63, 63, 54,  7, 55, 55, 54,      // Crossing Top to Bottom Empty Horizontal (65-68) (69-72)
+															 31, 53, 53, 61, 31, 62, 62, 61       // Crossing Top to Bottom Full Horizontal (73-76) (77-80)
 															 };
 
 // Garbage collected sprite creation (reference counter only)
@@ -86,9 +86,43 @@ void timer_callback(void *data) {
 	
 		// Simple float code
 		unsigned char ctile=tilemap[(cpy*ENGINE_TILEMAPWIDTH)+cpx];
-		ctile ++;
-		if(ctile>80) ctile=73;
+	
+		// Tile delta
+		int cpxd=0;
+		int cpyd=0;
+		unsigned char ntile=0;
+	
+		// One statement for each end tile (if it it not an and tile then advance tile)
+		if(ctile==4){
+				cpyd=1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}if(ctile==8){
+				cpyd=-1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				ntile=77;
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}if(ctile==12){
+				cpxd=1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				ntile=57;
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}if(ctile==16){
+				cpxd=-1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				ntile=61;
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}else{
+				ctile ++;			
+		}
+	
 		tilemap[(cpy*ENGINE_TILEMAPWIDTH)+cpx]=ctile;
+		
+		// if we changed the tile
+		if(ntile>0){
+				cpx+=cpxd;
+				cpy+=cpyd;
+		}
 	
 	  layer_mark_dirty(s_image_layer);
 
