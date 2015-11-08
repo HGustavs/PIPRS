@@ -32,8 +32,8 @@ static int state=1;
 int level=0;
 
 // Current processing Coordinate
-static int cx=10;
-static int cy=10;
+static int cpx=10;
+static int cpy=10;
 
 // Bitmap garbage collection
 int bitmapcnt=0;
@@ -118,7 +118,7 @@ static void initGameBoard()
 	pdx=ENGINE_PLAYER_STARTDX;
 	pdy=ENGINE_PLAYER_STARTDY;
 
-	//tilemap[(ENGINE_TILEMAPWIDTH*cy)+cx]=1;	
+	tilemap[(ENGINE_TILEMAPWIDTH*cpy)+cpx]=1;	
 	
 	// Randomize mines
 	/*
@@ -132,6 +132,12 @@ static void initGameBoard()
 	
 }
 
+//---------------------------------------------------------------------------------//
+// up_click_handler
+//---------------------------------------------------------------------------------//
+// Called when select is clicked
+//---------------------------------------------------------------------------------//
+
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 	if(state==0){
 			state=1;
@@ -144,10 +150,18 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 		}else if(state==2){
 				state=0;
 		}
+
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "px: %d py: %d pdx: %d pdy: %d", px,py,pdx,pdy);
 	
 		// Redraw Graphics
     layer_mark_dirty(s_image_layer);
 }
+
+//---------------------------------------------------------------------------------//
+// down_click_handler
+//---------------------------------------------------------------------------------//
+// Called when down is clicked
+//---------------------------------------------------------------------------------//
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 	if(state==0){
@@ -170,6 +184,12 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 		}
     layer_mark_dirty(s_image_layer);
 }
+
+//---------------------------------------------------------------------------------//
+// up_click_handler
+//---------------------------------------------------------------------------------//
+// Called when up is clicked
+//---------------------------------------------------------------------------------//
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 	if(state==0){
@@ -245,9 +265,9 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 			cx=px-4;
 			cy=py-4;
 			if(cx<0) cx=0;
-			if(cx>ENGINE_TILE_NOX) cx=ENGINE_TILE_NOX;
+			if(cx>(ENGINE_TILEMAPWIDTH-ENGINE_TILE_NOX)) cx=(ENGINE_TILEMAPWIDTH-ENGINE_TILE_NOX);
 			if(cy<0) cy=0;
-			if(cy>ENGINE_TILE_NOX) cy=ENGINE_TILE_NOX;	
+			if(cy>(ENGINE_TILEMAPWIDTH-ENGINE_TILE_NOX)) cy=(ENGINE_TILEMAPWIDTH-ENGINE_TILE_NOX);	
 
 			// Y coordinate first, loop over x coordinate
 			for(int j=0;j<ENGINE_TILE_NOX;j++){
@@ -320,6 +340,12 @@ static void main_window_load(Window *window) {
 	timer = app_timer_register(delta, (AppTimerCallback) timer_callback, NULL);
 
 }
+
+//---------------------------------------------------------------------------------//
+// main_window_unload
+//---------------------------------------------------------------------------------//
+// Called when window is about to be destroyed
+//---------------------------------------------------------------------------------//
 
 static void main_window_unload(Window *window) {
 	
