@@ -3,10 +3,15 @@
 
 #define PERSIST_KEY_SCORE 771
 
+#define ENGINE_TILE_SIZE 18
+#define ENGINE_TILE_NOX 8
+#define ENGINE_TILE_NOXH 4
+#define ENGINE_HIGHSCORE_OFFS 64
+
 static Window *s_main_window;
 static Layer *s_image_layer;
 static GBitmap *s_image;
-static GBitmap *t_image[64];
+static GBitmap *t_image[84];
 static unsigned char tilemap[576];
 static unsigned char hiscore[25];
 static unsigned char score[5];
@@ -16,7 +21,7 @@ static int px;
 static int py;
 static int pdx;
 static int pdy;
-static int state=0;
+static int state=1;
 int level=0;
 
 // Bitmap garbage collection
@@ -246,6 +251,9 @@ static void click_config_provider(void *context) {
 //  graphics_context_set_compositing_mode(ctx, GCompOpSet);
 //  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
 //  graphics_draw_bitmap_in_rect(ctx, s_bitmap, gbitmap_get_bounds(s_bitmap));
+// ENGINE_TILE_SIZE 18
+// ENGINE_TILE_NOX 8
+//  ENGINE_TILE_NOXH 4
 
 static void layer_update_callback(Layer *layer, GContext* ctx) {
 	
@@ -276,27 +284,22 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 			int ccx;
 			int tileno;
 
-			cx=px-6;
-			cy=py-6;
+			// Current on-screen cursorcoordinate if outside box reset
+			cx=px-4;
+			cy=py-4;
 			if(cx<0) cx=0;
-			if(cx>12) cx=12;
+			if(cx>ENGINE_TILE_NOX) cx=ENGINE_TILE_NOX;
 			if(cy<0) cy=0;
-			if(cy>12) cy=12;	
+			if(cy>ENGINE_TILE_NOX) cy=ENGINE_TILE_NOX;	
 
 			// Y coordinate first, loop over x coordinate
-			for(int j=0;j<12;j++){
+			for(int j=0;j<ENGINE_TILE_NOX;j++){
 				ccx=cx;
-				for(int i=0;i<12;i++){
+				for(int i=0;i<ENGINE_TILE_NOX;i++){
 						tileno=tilemap[(cy*24)+ccx];
-						if(state==2){
-								if(tileno>=100) tileno=11;
-								else if(tileno==10) tileno=10;
-								else tileno=0;
-						}
 						if(tileno>100) tileno=tileno-100;
 						if((ccx==px)&&(cy==py)) tileno=11;
-						if((ccx==(px+pdx))&&(cy==(py+pdy))) tileno+=12;
-						graphics_draw_bitmap_in_rect(ctx, t_image[tileno], GRect(i*12,j*12, 12, 12));			
+						graphics_draw_bitmap_in_rect(ctx, t_image[tileno], GRect(i*ENGINE_TILE_SIZE,j*ENGINE_TILE_SIZE, ENGINE_TILE_SIZE, ENGINE_TILE_SIZE));			
 						ccx++;
 				}
 				cy++;
@@ -307,7 +310,6 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 					graphics_draw_bitmap_in_rect(ctx, t_image[34], GRect((i*14),144, 14, 24));
 					graphics_draw_bitmap_in_rect(ctx, t_image[34], GRect((i*14)+108,144, 14, 24));
 			}
-
 			// Update Score (slight overdraw to accomplish centering...)
 			for(int i=0;i<5;i++){
 					graphics_draw_bitmap_in_rect(ctx, t_image[score[i]+24], GRect(94-(i*14),144, 14, 24));
@@ -333,17 +335,22 @@ static void main_window_load(Window *window) {
   s_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NO_LITTER);
 
 	// Define tiles (2 rows of 12 tiles at 12x12 px and 1 row of 14x23)
-	for(int i=0;i<12;i++){
-			t_image[i] = makeSprite(s_image, GRect(i*12, 0, 12, 12));			
-			t_image[i+12] = makeSprite(s_image, GRect(i*12, 12, 12, 12));			
-			if(i<10) t_image[i+24] = makeSprite(s_image, GRect(i*14, 24, 14, 24));
-			if(i<3) t_image[i+34] = makeSprite(s_image, GRect(i*14, 48, 14, 24));
+	// Define tiles (2 rows of 12 tiles at 12x12 px and 1 row of 14x23)
+
+	// ENGINE_TILE_NOX is used to count number of tiles automatically ENGINE_TILE_SIZE is used to size the tiles
+	for(int j=0;j<5;j++){		
+			for(int i=0;i<ENGINE_TILE_NOX;i++){
+					t_image[(j*ENGINE_TILE_NOX)+i] = makeSprite(s_image, GRect((i%ENGINE_TILE_SIZE)*ENGINE_TILE_SIZE, j*ENGINE_TILE_SIZE, ENGINE_TILE_SIZE, ENGINE_TILE_SIZE));			
+					
+					// Define High Score Tiles
+					if(j==0){
+							if(i<10) t_image[i+24] = makeSprite(s_image, GRect(i*14, 24, 14, 24));				
+					}
+			}
 	}
-	t_image[37]=makeSprite(s_image, GRect(0, 72, 144, 42));
-	t_image[38]=makeSprite(s_image, GRect(0, 129, 33, 23));
 	
 	// Prepare for new game
-	state=0;
+	state=1;
 	initGameBoard();
 	
 	// Prepare Timer
