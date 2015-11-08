@@ -8,6 +8,8 @@
 #define ENGINE_TILE_NOXH 4
 #define ENGINE_HIGHSCORE_OFFS 64
 
+#define GColorBlackARGB8 ((uint8_t)0b11000000)
+
 static Window *s_main_window;
 static Layer *s_image_layer;
 static GBitmap *s_image;
@@ -307,12 +309,12 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 
 			// Clear to the left of score
 			for(int i=0;i<3;i++){
-					graphics_draw_bitmap_in_rect(ctx, t_image[34], GRect((i*14),144, 14, 24));
-					graphics_draw_bitmap_in_rect(ctx, t_image[34], GRect((i*14)+108,144, 14, 24));
+//					graphics_draw_bitmap_in_rect(ctx, t_image[34], GRect((i*14),144, 14, 24));
+//					graphics_draw_bitmap_in_rect(ctx, t_image[34], GRect((i*14)+108,144, 14, 24));
 			}
 			// Update Score (slight overdraw to accomplish centering...)
 			for(int i=0;i<5;i++){
-					graphics_draw_bitmap_in_rect(ctx, t_image[score[i]+24], GRect(94-(i*14),144, 14, 24));
+//					graphics_draw_bitmap_in_rect(ctx, t_image[score[i]+ENGINE_HIGHSCORE_OFFS], GRect(94-(i*14),144, 14, 24));
 			}		
 	}
 }
@@ -328,6 +330,7 @@ static void main_window_load(Window *window) {
   GRect bounds = layer_get_frame(window_layer);
 
   s_image_layer = layer_create(bounds);
+	
   layer_set_update_proc(s_image_layer, layer_update_callback);
   layer_add_child(window_layer, s_image_layer);
 		
