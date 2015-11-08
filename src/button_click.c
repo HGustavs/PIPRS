@@ -31,6 +31,10 @@ static int pdy;
 static int state=1;
 int level=0;
 
+// Current processing Coordinate
+static int cx=10;
+static int cy=10;
+
 // Bitmap garbage collection
 int bitmapcnt=0;
 
@@ -103,8 +107,8 @@ static void initGameBoard()
 	// Clear all edges of tilemap
 	for(int i=0;i<ENGINE_TILEMAPWIDTH;i++){
 			tilemap[i]=8;
-			tilemap[((ENGINE_TILEMAPWIDTH-1)*ENGINE_TILEMAPWIDTH)+i]=8;
 			tilemap[i*ENGINE_TILEMAPWIDTH]=8;
+			tilemap[((ENGINE_TILEMAPWIDTH-1)*ENGINE_TILEMAPWIDTH)+i]=8;
 			tilemap[(i*ENGINE_TILEMAPWIDTH)+ENGINE_TILEMAPWIDTH-1]=8;
 	}
 	
@@ -114,6 +118,8 @@ static void initGameBoard()
 	pdx=ENGINE_PLAYER_STARTDX;
 	pdy=ENGINE_PLAYER_STARTDY;
 
+	//tilemap[(ENGINE_TILEMAPWIDTH*cy)+cx]=1;	
+	
 	// Randomize mines
 	/*
 	int tx,ty;
@@ -132,7 +138,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 			initGameBoard();
 	}	else if(state==1){
 				// Only move if allowed
-				if(((px+pdx)<(ENGINE_TILEMAPWIDTH-1)&&((px+pdx)>0)) px+=pdx;
+				if(((px+pdx)<(ENGINE_TILEMAPWIDTH-1))&&((px+pdx)>0)) px+=pdx;
 				if(((py+pdy)<(ENGINE_TILEMAPWIDTH-1))&&((py+pdy)>0)) py+=pdy;
 
 		}else if(state==2){
@@ -247,7 +253,7 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 			for(int j=0;j<ENGINE_TILE_NOX;j++){
 				ccx=cx;
 				for(int i=0;i<ENGINE_TILE_NOX;i++){
-						tileno=tilemap[(cy*ENGINE_TILE_NOX)+ccx];
+						tileno=tilemap[(cy*ENGINE_TILEMAPWIDTH)+ccx];
 
 						// Draw Player
 						if((ccx==px)&&(cy==py)) tileno=8;
