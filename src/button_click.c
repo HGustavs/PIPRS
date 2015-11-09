@@ -42,7 +42,7 @@ int bitmapcnt=0;
 AppTimer *timer;
 const int delta = 500;
 
-#define starttile 21
+#define starttile 29
 
 // Tile redirection array (do not morph 0, normal tiles start at 1)
 static int redirect_tile[81] = { 0, 
@@ -121,6 +121,16 @@ void timer_callback(void *data) {
 				cpxd=1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
 				ntile=57;
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}if(ctile==28){
+				cpyd=1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				ntile=73;
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}if(ctile==32){
+				cpxd=-1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				ntile=61;
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
 		}else{
 				ctile ++;			
