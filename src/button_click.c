@@ -42,7 +42,7 @@ int bitmapcnt=0;
 AppTimer *timer;
 const int delta = 500;
 
-#define starttile 13
+#define starttile 21
 
 // Tile redirection array (do not morph 0, normal tiles start at 1)
 static int redirect_tile[81] = { 0, 
@@ -51,7 +51,7 @@ static int redirect_tile[81] = { 0,
 																3, 11, 19, 27,  3, 35, 43, 27,      // Bottom Right (17-20) (21-24)
 																4, 12, 20, 28,  4, 36, 44, 28,      // Bottom Left (25-28) (29-32)
 																5, 13, 21, 29,  5, 37, 45, 29,      // Top Right (33-36) (37-40)
-																6, 14, 22, 30,  6, 38, 46, 30,      // Top Left (41-44) (46-48)
+																6, 14, 22, 30,  6, 38, 46, 30,      // Top Left (41-44) (45-48)
 																7, 15, 23, 31,  7, 39, 47, 31,      // Crossing Left To Right Empty Vert (49-52) (53-56)
 															 54, 51, 59, 61, 54, 52, 60, 61,      // Crossing Left to Right Full Vert (57-60) (61-64)
 															  7, 63, 63, 54,  7, 55, 55, 54,      // Crossing Top to Bottom Empty Horizontal (65-68) (69-72)
@@ -111,6 +111,16 @@ void timer_callback(void *data) {
 				cpxd=-1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
 				ntile=61;
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}if(ctile==20){
+				cpyd=1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				ntile=73;
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}if(ctile==24){
+				cpxd=1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				ntile=57;
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
 		}else{
 				ctile ++;			
