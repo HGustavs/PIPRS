@@ -42,7 +42,7 @@ int bitmapcnt=0;
 AppTimer *timer;
 const int delta = 500;
 
-#define starttile 1
+#define starttile 13
 
 // Tile redirection array (do not morph 0, normal tiles start at 1)
 static int redirect_tile[81] = { 0, 
@@ -98,11 +98,24 @@ void timer_callback(void *data) {
 		if(ctile==4||ctile==20||ctile==28||ctile==68||ctile==76){
 				cpyd=1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				ntile=1;
+				if(ntile==1||ntile==33||ntile==41||ntile==65||ntile==73){      // Normal tile - do nothing - let engine continue filling pipes
+				}else if(ntile==49){ 		                                      // Tile that needs to flip direction
+						ntile=65;
+				}else{
+					// Game over!
+					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER A %d",ntile);
+				}
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
 		}else if(ctile==16||ctile==32||ctile==44||ctile==56||ctile==64){
 				cpxd=-1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				if(ntile==13||ntile==17||ntile==37||ntile==53||ntile==61){      // Normal tile - do nothing - let engine continue filling pipes
+				}else if(ntile==9||ntile==33||ntile==49){                                  // Tile that needs to flip direction
+						ntile+=4;
+				}else{
+					// Game over!
+					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER B %d",ntile);
+				}
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
 		}else if(ctile==12||ctile==24||ctile==36||ctile==52||ctile==60){
 				cpxd=1;
@@ -111,6 +124,17 @@ void timer_callback(void *data) {
 		}else if(ctile==8||ctile==40||ctile==48||ctile==72||ctile==80){
 				cpyd=-1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				if(ntile==5||ntile==37||ntile==45||ntile==69||ntile==77){      // Normal tile - do nothing - let engine continue filling pipes
+				}else if(ntile==1||ntile==17||ntile==25){ 		                 // Tile that needs to flip direction
+						ntile+=4;
+				}else if(ntile==49){ 		                 											 // Tile that needs to flip direction
+						ntile=69;
+				}else if(ntile==73){ 		                 											 // Tile that needs to flip direction
+						ntile=77;
+				}else{
+					// Game over!
+					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER D %d",ntile);
+				}
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
 		}else{
 				ctile ++;			
@@ -172,6 +196,7 @@ static void initGameBoard()
 	pdy=ENGINE_PLAYER_STARTDY;
 
 	tilemap[(ENGINE_TILEMAPWIDTH*cpy)+cpx]=starttile;	
+	tilemap[(ENGINE_TILEMAPWIDTH*(cpy))+(cpx+-1)]=33;	
 	
 	// Randomize mines
 	/*
