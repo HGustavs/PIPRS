@@ -384,11 +384,11 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 
 			// Draw Future Tiles
 			for(int i=0;i<3;i++){
-					graphics_draw_bitmap_in_rect(ctx, t_image[i+1], GRect(56+(i*22),146, 18, 18));
+					graphics_draw_bitmap_in_rect(ctx, t_image[i+1], GRect(50+(i*22),146, 18, 18));
 			}		
 			
-			graphics_draw_bitmap_in_rect(ctx, t_image[65+(StartTimer/10)], GRect(5,144, 14, 24));
-			graphics_draw_bitmap_in_rect(ctx, t_image[65+(StartTimer%10)], GRect(19,144, 14, 24));
+			graphics_draw_bitmap_in_rect(ctx, t_image[64+(StartTimer/10)], GRect(16,144, 14, 24));
+			graphics_draw_bitmap_in_rect(ctx, t_image[64+(StartTimer%10)], GRect(30,144, 14, 24));
 	}
 }
 
