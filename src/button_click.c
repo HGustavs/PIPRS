@@ -1,7 +1,7 @@
 
 #include "pebble.h"
 
-#define PERSIST_KEY_SCORE 771
+#define PERSIST_KEY_SCORE 772
 
 #define ENGINE_TILE_SIZE 18
 #define ENGINE_TILE_NOX 8
@@ -23,6 +23,9 @@ static unsigned char tilemap[ENGINE_TILEMAPWIDTH*ENGINE_TILEMAPWIDTH];
 static unsigned char hiscore[25];
 static unsigned char score[5];
 
+static int StartTimer=25;
+static unsigned char rlist[4]={1,2,3,4} ;
+
 // Player coordinate and player direction
 static int px;
 static int py;
@@ -42,7 +45,7 @@ int bitmapcnt=0;
 AppTimer *timer;
 const int delta = 500;
 
-#define starttile 13
+#define starttile 9
 
 // Tile redirection array (do not morph 0, normal tiles start at 1)
 static int redirect_tile[81] = { 0, 
@@ -95,10 +98,10 @@ void timer_callback(void *data) {
 		// This complicated tangle of if-statements handles the pipe updating operations.
 		// One statement for each end tile (if it it not an and tile then advance tile)
 		// A is Below, B is Left, C is Right, and D is Above
-		if(ctile==4||ctile==20||ctile==28||ctile==68||ctile==76){
+		if(ctile==4||ctile==20||ctile==28||ctile==68||ctile==76){					//----===## A ##===----
 				cpyd=1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				if(ntile==1||ntile==33||ntile==41||ntile==65||ntile==73){      // Normal tile - do nothing - let engine continue filling pipes
+				if(ntile==1||ntile==33||ntile==41||ntile==65||ntile==73){     // Normal tile - do nothing - let engine continue filling pipes
 				}else if(ntile==49){ 		                                      // Tile that needs to flip direction
 						ntile=65;
 				}else{
@@ -106,32 +109,41 @@ void timer_callback(void *data) {
 					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER A %d",ntile);
 				}
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}else if(ctile==16||ctile==32||ctile==44||ctile==56||ctile==64){
+		}else if(ctile==16||ctile==32||ctile==44||ctile==56||ctile==64){	//----===## B ##===----
 				cpxd=-1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				if(ntile==13||ntile==17||ntile==37||ntile==53||ntile==61){      // Normal tile - do nothing - let engine continue filling pipes
-				}else if(ntile==9||ntile==33||ntile==49){                                  // Tile that needs to flip direction
+				if(ntile==13||ntile==17||ntile==37||ntile==53||ntile==61){    // Normal tile - do nothing - let engine continue filling pipes
+				}else if(ntile==9||ntile==33||ntile==49){                     // Tile that needs to flip direction
 						ntile+=4;
-				}else if(ntile==68||ntile==72){                                  // Tile that needs to flip direction
+				}else if(ntile==68||ntile==72){                               // Vertical part 
 						ntile=61;
 				}else{
 					// Game over!
 					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER B %d",ntile);
 				}
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}else if(ctile==12||ctile==24||ctile==36||ctile==52||ctile==60){
+		}else if(ctile==12||ctile==24||ctile==36||ctile==52||ctile==60){	//----===## C ##===----
 				cpxd=1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				if(ntile==9||ntile==21||ntile==33||ntile==49||ntile==57||ntile==25||ntile==49){  // Normal tile - do nothing - let engine continue filling pipes
+				}else if(ntile==41){ 		                // Tile that needs to flip direction
+						ntile=45;
+				}else if(ntile==68||ntile==72){          										// Horizontal part has been filled
+						ntile=57;
+				}else{
+					// Game over!
+					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER C %d",ntile);
+				}
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}else if(ctile==8||ctile==40||ctile==48||ctile==72||ctile==80){
+		}else if(ctile==8||ctile==40||ctile==48||ctile==72||ctile==80){		//----===## D ##===----
 				cpyd=-1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				if(ntile==5||ntile==37||ntile==45||ntile==69||ntile==77){      // Normal tile - do nothing - let engine continue filling pipes
-				}else if(ntile==1||ntile==17||ntile==25){ 		                 // Tile that needs to flip direction
+				if(ntile==5||ntile==37||ntile==45||ntile==69||ntile==77){    // Normal tile - do nothing - let engine continue filling pipes
+				}else if(ntile==1||ntile==17||ntile==25){ 		               // Tile that needs to flip direction
 						ntile+=4;
-				}else if(ntile==49){ 		                 											 // Tile that needs to flip direction
+				}else if(ntile==49){ 		                 										// Tile that needs to flip direction
 						ntile=69;
-				}else if(ntile==73){ 		                 											 // Tile that needs to flip direction
+				}else if(ntile==52||ntile==56){          										// Horizontal part has been filled
 						ntile=77;
 				}else{
 					// Game over!
@@ -198,7 +210,7 @@ static void initGameBoard()
 	pdy=ENGINE_PLAYER_STARTDY;
 
 	tilemap[(ENGINE_TILEMAPWIDTH*cpy)+cpx]=starttile;	
-	tilemap[(ENGINE_TILEMAPWIDTH*(cpy))+(cpx+-1)]=68;	
+	tilemap[(ENGINE_TILEMAPWIDTH*(cpy))+(cpx+1)]=68;	
 	
 	// Randomize mines
 	/*
@@ -370,15 +382,13 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 				cy++;
 			}
 
-			// Clear to the left of score
+			// Draw Future Tiles
 			for(int i=0;i<3;i++){
-//					graphics_draw_bitmap_in_rect(ctx, t_image[34], GRect((i*14),144, 14, 24));
-//					graphics_draw_bitmap_in_rect(ctx, t_image[34], GRect((i*14)+108,144, 14, 24));
-			}
-			// Update Score (slight overdraw to accomplish centering...)
-			for(int i=0;i<5;i++){
-//					graphics_draw_bitmap_in_rect(ctx, t_image[score[i]+ENGINE_HIGHSCORE_OFFS], GRect(94-(i*14),144, 14, 24));
+					graphics_draw_bitmap_in_rect(ctx, t_image[i+1], GRect(56+(i*22),146, 18, 18));
 			}		
+			
+			graphics_draw_bitmap_in_rect(ctx, t_image[65+(StartTimer/10)], GRect(5,144, 14, 24));
+			graphics_draw_bitmap_in_rect(ctx, t_image[65+(StartTimer%10)], GRect(19,144, 14, 24));
 	}
 }
 
@@ -410,7 +420,7 @@ static void main_window_load(Window *window) {
 					
 					// Define High Score Tiles
 					if(j==0){
-							if(i<10) t_image[i+24] = makeSprite(s_image, GRect(i*14, 24, 14, 24));				
+							if(i<10) t_image[i+64] = makeSprite(s_image, GRect(i*14, 144, 14, 24));				
 					}
 			}
 	}
