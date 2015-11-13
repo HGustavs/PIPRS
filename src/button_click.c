@@ -112,6 +112,8 @@ void timer_callback(void *data) {
 				if(ntile==13||ntile==17||ntile==37||ntile==53||ntile==61){      // Normal tile - do nothing - let engine continue filling pipes
 				}else if(ntile==9||ntile==33||ntile==49){                                  // Tile that needs to flip direction
 						ntile+=4;
+				}else if(ntile==68||ntile==72){                                  // Tile that needs to flip direction
+						ntile=61;
 				}else{
 					// Game over!
 					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER B %d",ntile);
@@ -196,7 +198,7 @@ static void initGameBoard()
 	pdy=ENGINE_PLAYER_STARTDY;
 
 	tilemap[(ENGINE_TILEMAPWIDTH*cpy)+cpx]=starttile;	
-	tilemap[(ENGINE_TILEMAPWIDTH*(cpy))+(cpx+-1)]=33;	
+	tilemap[(ENGINE_TILEMAPWIDTH*(cpy))+(cpx+-1)]=68;	
 	
 	// Randomize mines
 	/*

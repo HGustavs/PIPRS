@@ -9,6 +9,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/Mania_Transp.png",
+                "name": "PNG_TRANSP",
+                "type": "png-trans"
+            },
+            {
                 "file": "images/MPRS_II.png",
                 "name": "IMAGE_NO_LITTER",
                 "type": "png"
