@@ -42,7 +42,7 @@ int bitmapcnt=0;
 AppTimer *timer;
 const int delta = 500;
 
-#define starttile 29
+#define starttile 1
 
 // Tile redirection array (do not morph 0, normal tiles start at 1)
 static int redirect_tile[81] = { 0, 
@@ -92,45 +92,25 @@ void timer_callback(void *data) {
 		int cpyd=0;
 		unsigned char ntile=0;
 	
+		// This complicated tangle of if-statements handles the pipe updating operations.
 		// One statement for each end tile (if it it not an and tile then advance tile)
-		if(ctile==4){
+		// A is Below, B is Left, C is Right, and D is Above
+		if(ctile==4||ctile==20||ctile==28||ctile==68||ctile==76){
 				cpyd=1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				ntile=1;
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}if(ctile==8){
+		}else if(ctile==16||ctile==32||ctile==44||ctile==56||ctile==64){
+				cpxd=-1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}else if(ctile==12||ctile==24||ctile==36||ctile==52||ctile==60){
+				cpxd=1;
+				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+		}else if(ctile==8||ctile==40||ctile==48||ctile==72||ctile==80){
 				cpyd=-1;
 				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				ntile=77;
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}if(ctile==12){
-				cpxd=1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				ntile=57;
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}if(ctile==16){
-				cpxd=-1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				ntile=61;
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}if(ctile==20){
-				cpyd=1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				ntile=73;
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}if(ctile==24){
-				cpxd=1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				ntile=57;
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}if(ctile==28){
-				cpyd=1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				ntile=73;
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}if(ctile==32){
-				cpxd=-1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				ntile=61;
 				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
 		}else{
 				ctile ++;			
