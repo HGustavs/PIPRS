@@ -26,6 +26,9 @@ static unsigned char hiscore[25];
 static unsigned char score[5];
 
 static int StartTimer=25;
+static int ClockSpeed=1;
+static int ClockCounter=0;
+
 static unsigned char rlist[4]={1,2,3,4} ;
 
 // Player coordinate and player direction
@@ -89,7 +92,8 @@ static int comparescore()
 
 void timer_callback(void *data) {
 		// Update Timer	
-		if(StartTimer>0) StartTimer--;	
+		ClockCounter++;
+		if(((ClockCounter%ClockSpeed)==0)&&StartTimer>0) StartTimer--;	
 	
 		// Simple float code
 		unsigned char ctile=tilemap[(cpy*ENGINE_TILEMAPWIDTH)+cpx];
@@ -219,6 +223,21 @@ static void initGameBoard()
 	// Randomize Future Tiles
 	for(int i=0;i<4;i++){
 			rlist[i]=1+(rand()%7);
+	}
+
+	// Make the level parameters
+	if(level==0){
+			// Clock 6 - Start 99 - No Limit - Short Distance - No Obstructions
+			StartTimer=99;
+			ClockSpeed=6;
+	}else if(level==1){
+			// Clock 4 - Start 99 - 10 block limit - Medium Distance - 0 Obstructions								
+	}else if(level==2){
+			// Clock 2 - Start 99 - 20 block limit - Long Distance - 20 Obstructions						
+	}else if(level==3){
+			// Clock 1 - Start 99 - 30 block limit - Long Distance - 50 Obstructions				
+	}else if(level==4){
+			// Clock 1 - Start 50 - 40 block limit - Long Distance - 100 Obstructions		
 	}
 	
 	// Randomize mines
@@ -471,6 +490,9 @@ static void main_window_load(Window *window) {
 					}
 			}
 	}
+	
+	t_image[72]=makeSprite(s_image, GRect(8*14, 144, 14, 24));				
+	t_image[73]=makeSprite(s_image, GRect(9*14, 144, 14, 24));				
 	
 	// Define transparent images as p_sel and p_walk
 	p_sel=gbitmap_create_with_resource(RESOURCE_ID_PNG_TRANSP);
