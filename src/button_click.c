@@ -19,6 +19,8 @@ static Window *s_main_window;
 static Layer *s_image_layer;
 static GBitmap *s_image;
 static GBitmap *t_image[84];
+static GBitmap *p_sel;
+static GBitmap *p_walk;
 static unsigned char tilemap[ENGINE_TILEMAPWIDTH*ENGINE_TILEMAPWIDTH];
 static unsigned char hiscore[25];
 static unsigned char score[5];
@@ -86,6 +88,8 @@ static int comparescore()
 //---------------------------------------------------------------------------------//
 
 void timer_callback(void *data) {
+		// Update Timer	
+		if(StartTimer>0) StartTimer--;	
 	
 		// Simple float code
 		unsigned char ctile=tilemap[(cpy*ENGINE_TILEMAPWIDTH)+cpx];
@@ -212,6 +216,11 @@ static void initGameBoard()
 	tilemap[(ENGINE_TILEMAPWIDTH*cpy)+cpx]=starttile;	
 	tilemap[(ENGINE_TILEMAPWIDTH*(cpy))+(cpx+1)]=68;	
 	
+	// Randomize Future Tiles
+	for(int i=0;i<4;i++){
+			rlist[i]=1+(rand()%7);
+	}
+	
 	// Randomize mines
 	/*
 	int tx,ty;
@@ -227,18 +236,41 @@ static void initGameBoard()
 //---------------------------------------------------------------------------------//
 // up_click_handler
 //---------------------------------------------------------------------------------//
+// Long Select Handler
+//---------------------------------------------------------------------------------//
+
+static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+		// Only in game mode 0.5s click time or more	
+		if(state==1){
+				// Lay pipe and advance
+				tilemap[(py*ENGINE_TILEMAPWIDTH)+px-1]=((rlist[0]-1)*8)+1;
+				for(int i=1;i<4;i++){
+					rlist[i-1]=rlist[i];							
+				}
+				rlist[3]=1+(rand()%7);
+		
+				// Place new tile and move in direction of that tile
+			 
+		}
+}
+
+//---------------------------------------------------------------------------------//
+// up_click_handler
+//---------------------------------------------------------------------------------//
 // Called when select is clicked
 //---------------------------------------------------------------------------------//
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-	if(state==0){
-			state=1;
-			initGameBoard();
-	}	else if(state==1){
+		
+		int currtile;
+		
+		if(state==0){
+				state=1;
+				initGameBoard();
+		}	else if(state==1){
 				// Only move if allowed
 				if(((px+pdx)<(ENGINE_TILEMAPWIDTH-1))&&((px+pdx)>0)) px+=pdx;
 				if(((py+pdy)<(ENGINE_TILEMAPWIDTH-1))&&((py+pdy)>0)) py+=pdy;
-
 		}else if(state==2){
 				state=0;
 		}
@@ -288,7 +320,7 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 			level--;
 			if(level==-1) level=4;
 	}else if(state==1){
-			if(pdx==1){
+				if(pdx==1){
 						pdx=0;
 						pdy=-1;
 				}else if(pdx==-1){
@@ -303,12 +335,6 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 				}
 		}
     layer_mark_dirty(s_image_layer);
-}
-
-static void click_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
-  window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
 }
 
 //---------------------------------------------------------------------------------//
@@ -352,6 +378,8 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 			int cy;
 			int ccx;
 			int tileno;
+			int tx=0;
+			int ty=0;
 
 			// Current on-screen cursorcoordinate if outside box reset
 			cx=px-4;
@@ -369,27 +397,46 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 	
 						// Morph tile number to graphical tile representation!
 						tileno=redirect_tile[tileno];
-
-						// Draw Player
-						if((ccx==px)&&(cy==py)) tileno=8;
-						
-						// Draw MoveTo Marker
-						if((ccx==(px+pdx))&&(cy==(py+pdy))) tileno=16;
-
-						graphics_draw_bitmap_in_rect(ctx, t_image[tileno], GRect(i*ENGINE_TILE_SIZE,j*ENGINE_TILE_SIZE, ENGINE_TILE_SIZE, ENGINE_TILE_SIZE));			
+						graphics_draw_bitmap_in_rect(ctx, t_image[tileno], GRect(i*ENGINE_TILE_SIZE,j*ENGINE_TILE_SIZE, ENGINE_TILE_SIZE, ENGINE_TILE_SIZE));
 						ccx++;
+						
+						// Assign Coordinates
+						if((ccx==px)&&(cy==py)){
+								tx=i;
+								ty=j;
+						}
 				}
 				cy++;
 			}
 
 			// Draw Future Tiles
-			for(int i=0;i<3;i++){
-					graphics_draw_bitmap_in_rect(ctx, t_image[i+1], GRect(50+(i*22),146, 18, 18));
+			for(int i=0;i<4;i++){
+					graphics_draw_bitmap_in_rect(ctx, t_image[rlist[i]], GRect(50+(i*22),146, 18, 18));
 			}		
 			
 			graphics_draw_bitmap_in_rect(ctx, t_image[64+(StartTimer/10)], GRect(16,144, 14, 24));
 			graphics_draw_bitmap_in_rect(ctx, t_image[64+(StartTimer%10)], GRect(30,144, 14, 24));
+	
+			// Draw current position
+			graphics_context_set_compositing_mode(ctx, GCompOpSet);
+			graphics_draw_bitmap_in_rect(ctx,p_walk, GRect((tx+pdx)*ENGINE_TILE_SIZE,(ty+pdy)*ENGINE_TILE_SIZE,18,18));
+			graphics_draw_bitmap_in_rect(ctx,p_sel, GRect(tx*ENGINE_TILE_SIZE,ty*ENGINE_TILE_SIZE,18,18));
+			graphics_context_set_compositing_mode(ctx, GCompOpAssign);
 	}
+}
+
+//---------------------------------------------------------------------------------//
+// click_config_provider
+//---------------------------------------------------------------------------------//
+// Creates all click event handlers
+//---------------------------------------------------------------------------------//
+
+static void click_config_provider(void *context) {
+  window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 500, select_long_click_handler, NULL);
+
 }
 
 //---------------------------------------------------------------------------------//
@@ -425,6 +472,10 @@ static void main_window_load(Window *window) {
 			}
 	}
 	
+	// Define transparent images as p_sel and p_walk
+	p_sel=gbitmap_create_with_resource(RESOURCE_ID_PNG_TRANSP);
+	p_walk=gbitmap_create_as_sub_bitmap(p_sel,GRect(0,18,18,18));
+	
 	// Prepare for new game
 	state=1;
 	initGameBoard();
@@ -452,6 +503,12 @@ static void main_window_unload(Window *window) {
 		
 	// Deallocate bitmap
  	gbitmap_destroy(s_image);
+	
+	// Deallocate bitmap
+ 	gbitmap_destroy(p_sel);
+	
+	// Deallocate bitmap
+ 	gbitmap_destroy(p_walk);
 	
 	// Destroy layer
 	layer_destroy(s_image_layer);

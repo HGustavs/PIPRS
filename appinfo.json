@@ -11,7 +11,10 @@
             {
                 "file": "images/Mania_Transp.png",
                 "name": "PNG_TRANSP",
-                "type": "png-trans"
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
             },
             {
                 "file": "images/MPRS_II.png",
