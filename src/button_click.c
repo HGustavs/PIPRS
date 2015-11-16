@@ -28,6 +28,10 @@ static unsigned char score[5];
 static int StartTimer=25;
 static int ClockSpeed=1;
 static int ClockCounter=0;
+static int StartX=0;
+static int StartY=0;
+static int GoalX=0;
+static int GoalY=0;
 
 static unsigned char rlist[4]={1,2,3,4} ;
 
@@ -53,7 +57,7 @@ const int delta = 500;
 #define starttile 9
 
 // Tile redirection array (do not morph 0, normal tiles start at 1)
-static int redirect_tile[81] = { 0, 
+static int redirect_tile[84] = { 0, 
 															  1,  9, 17, 25,  1, 33, 41, 25,			// Vertical (1-4) (5-8)
 															  2, 10, 18, 26,  2, 34, 42, 26,			// Horizontal (9-12) (13-16)
 																3, 11, 19, 27,  3, 35, 43, 27,      // Bottom Right (17-20) (21-24)
@@ -63,7 +67,8 @@ static int redirect_tile[81] = { 0,
 																7, 15, 23, 31,  7, 39, 47, 31,      // Crossing Left To Right Empty Vert (49-52) (53-56)
 															 54, 51, 59, 61, 54, 52, 60, 61,      // Crossing Left to Right Full Vert (57-60) (61-64)
 															  7, 63, 63, 54,  7, 55, 55, 54,      // Crossing Top to Bottom Empty Horizontal (65-68) (69-72)
-															 31, 53, 53, 61, 31, 62, 62, 61       // Crossing Top to Bottom Full Horizontal (73-76) (77-80)
+															 31, 53, 53, 61, 31, 62, 62, 61,      // Crossing Top to Bottom Full Horizontal (73-76) (77-80)
+															 8, 16, 24                            // Wall Tile, Start Tile and End Tile
 															 };
 
 // Garbage collected sprite creation (reference counter only)
@@ -205,10 +210,10 @@ static void initGameBoard()
 
 	// Clear all edges of tilemap
 	for(int i=0;i<ENGINE_TILEMAPWIDTH;i++){
-			tilemap[i]=8;
-			tilemap[i*ENGINE_TILEMAPWIDTH]=8;
-			tilemap[((ENGINE_TILEMAPWIDTH-1)*ENGINE_TILEMAPWIDTH)+i]=8;
-			tilemap[(i*ENGINE_TILEMAPWIDTH)+ENGINE_TILEMAPWIDTH-1]=8;
+			tilemap[i]=80;
+			tilemap[i*ENGINE_TILEMAPWIDTH]=80;
+			tilemap[((ENGINE_TILEMAPWIDTH-1)*ENGINE_TILEMAPWIDTH)+i]=81;
+			tilemap[(i*ENGINE_TILEMAPWIDTH)+ENGINE_TILEMAPWIDTH-1]=81;
 	}
 	
 	// Move player to center of tile map
@@ -216,9 +221,6 @@ static void initGameBoard()
 	py=ENGINE_PLAYER_STARTY;
 	pdx=ENGINE_PLAYER_STARTDX;
 	pdy=ENGINE_PLAYER_STARTDY;
-
-	tilemap[(ENGINE_TILEMAPWIDTH*cpy)+cpx]=starttile;	
-	tilemap[(ENGINE_TILEMAPWIDTH*(cpy))+(cpx+1)]=68;	
 	
 	// Randomize Future Tiles
 	for(int i=0;i<4;i++){
@@ -230,6 +232,10 @@ static void initGameBoard()
 			// Clock 6 - Start 99 - No Limit - Short Distance - No Obstructions
 			StartTimer=99;
 			ClockSpeed=6;
+			StartX=8+(rand()%8);
+			StartY=8+(rand()%8);
+			GoalX=12-StartX-12;
+			GoalY=12-StartY-12;
 	}else if(level==1){
 			// Clock 4 - Start 99 - 10 block limit - Medium Distance - 0 Obstructions								
 	}else if(level==2){
@@ -239,6 +245,10 @@ static void initGameBoard()
 	}else if(level==4){
 			// Clock 1 - Start 50 - 40 block limit - Long Distance - 100 Obstructions		
 	}
+
+	// Place Start and Goal Tiles in tilemap
+	tilemap[(ENGINE_TILEMAPWIDTH*StartY)+StartX]=81;	
+	tilemap[(ENGINE_TILEMAPWIDTH*GoalY)+GoalX]=82;	
 	
 	// Randomize mines
 	/*
