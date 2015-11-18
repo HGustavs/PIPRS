@@ -32,6 +32,7 @@ static int StartX=0;
 static int StartY=0;
 static int GoalX=0;
 static int GoalY=0;
+static int Obstructions=0;
 
 static unsigned char rlist[4]={1,2,3,4} ;
 
@@ -210,8 +211,8 @@ static void initGameBoard()
 
 	// Clear all edges of tilemap
 	for(int i=0;i<ENGINE_TILEMAPWIDTH;i++){
-			tilemap[i]=80;
-			tilemap[i*ENGINE_TILEMAPWIDTH]=80;
+			tilemap[i]=81;
+			tilemap[i*ENGINE_TILEMAPWIDTH]=81;
 			tilemap[((ENGINE_TILEMAPWIDTH-1)*ENGINE_TILEMAPWIDTH)+i]=81;
 			tilemap[(i*ENGINE_TILEMAPWIDTH)+ENGINE_TILEMAPWIDTH-1]=81;
 	}
@@ -234,8 +235,9 @@ static void initGameBoard()
 			ClockSpeed=6;
 			StartX=8+(rand()%8);
 			StartY=8+(rand()%8);
-			GoalX=12-StartX-12;
-			GoalY=12-StartY-12;
+			GoalX=12-StartX+12;
+			GoalY=12-StartY+12;
+			Obstructions=100;
 	}else if(level==1){
 			// Clock 4 - Start 99 - 10 block limit - Medium Distance - 0 Obstructions								
 	}else if(level==2){
@@ -246,19 +248,19 @@ static void initGameBoard()
 			// Clock 1 - Start 50 - 40 block limit - Long Distance - 100 Obstructions		
 	}
 
-	// Place Start and Goal Tiles in tilemap
-	tilemap[(ENGINE_TILEMAPWIDTH*StartY)+StartX]=81;	
-	tilemap[(ENGINE_TILEMAPWIDTH*GoalY)+GoalX]=82;	
+	// Place Start and Goal Tiles in tilemap and move start of computation to right place
+	tilemap[(ENGINE_TILEMAPWIDTH*StartY)+StartX]=82;
+	tilemap[(ENGINE_TILEMAPWIDTH*GoalY)+GoalX]=83;	
+	cpx=StartX-1;
+	cpy=StartY;
 	
-	// Randomize mines
-	/*
+	// Randomize un-navigable obstructions.
 	int tx,ty;
-	for(int i=0;i<minecount;i++){
-			tx=1+(rand()%22);
-			ty=1+(rand()%22);
-			tilemap[(tx*24)+ty]=100;
+	for(int i=0;i<Obstructions;i++){
+			tx=2+(rand()%20);
+			ty=2+(rand()%20);
+			tilemap[(tx*24)+ty]=81;
 	}
-*/
 	
 }
 
