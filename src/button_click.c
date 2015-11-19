@@ -12,6 +12,8 @@
 #define ENGINE_PLAYER_STARTY 12
 #define ENGINE_PLAYER_STARTDX 0
 #define ENGINE_PLAYER_STARTDY 1
+#define ENGINE_FONT_HEIGHT 18
+#define ENGINE_FONT_SPACING 2
 
 #define GColorBlackARGB8 ((uint8_t)0b11000000)
 
@@ -41,7 +43,7 @@ static int px;
 static int py;
 static int pdx;
 static int pdy;
-static int state=1;
+static int state=2;
 int level=0;
 
 // Current processing Coordinate
@@ -72,6 +74,39 @@ static int redirect_tile[84] = { 0,
 															 8, 16, 24                            // Wall Tile, Start Tile and End Tile
 															 };
 
+// Font character redirection
+static int font_characters[26]={
+		50,78,74,0,56,0,77,0,80,0,
+		0,57,79,58,48,76,81,75,40,0,
+	  49,82,0,0,0,0
+};
+
+// Per character font widths A-J K-T U-Z 
+static int font_width[26]={
+		9,9,9,9,9,9,9,9,4,9,
+		9,9,15,9,9,9,5,9,9,9,
+	  9,9,9,9,9,9
+};
+
+//---------------------------------------------------------------------------------//
+// writestring
+//---------------------------------------------------------------------------------//
+// Proportional Width Text Writer
+//---------------------------------------------------------------------------------//
+
+void writestring(GContext* ctx,char *str,int sx,int sy)
+{	
+		int len=strlen(str);
+		int xk=sx;
+		for(int i=0;i<len;i++){
+				int chr=str[i]-65;
+				if(font_characters[chr]!=0){
+						graphics_draw_bitmap_in_rect(ctx, t_image[font_characters[chr]], GRect(xk,sy, font_width[chr], ENGINE_FONT_HEIGHT));						
+				}
+				xk+=font_width[chr]+ENGINE_FONT_SPACING;	
+		}
+}
+
 // Garbage collected sprite creation (reference counter only)
 static GBitmap* makeSprite(const GBitmap * base_bitmap, GRect sub_rect)
 {
@@ -79,6 +114,12 @@ static GBitmap* makeSprite(const GBitmap * base_bitmap, GRect sub_rect)
 //	APP_LOG(APP_LOG_LEVEL_DEBUG, "Loop index now %d", bitmapcnt);
 	return gbitmap_create_as_sub_bitmap(base_bitmap,sub_rect);
 }
+
+//---------------------------------------------------------------------------------//
+// comparescore
+//---------------------------------------------------------------------------------//
+// Returns true if current score is higher than high score
+//---------------------------------------------------------------------------------//
 
 static int comparescore()
 {
@@ -97,86 +138,92 @@ static int comparescore()
 //---------------------------------------------------------------------------------//
 
 void timer_callback(void *data) {
-		// Update Timer	
-		ClockCounter++;
-		if(((ClockCounter%ClockSpeed)==0)&&StartTimer>0) StartTimer--;	
-	
-		// Simple float code
-		unsigned char ctile=tilemap[(cpy*ENGINE_TILEMAPWIDTH)+cpx];
-	
-		// Tile delta
-		int cpxd=0;
-		int cpyd=0;
-		unsigned char ntile=0;
-	
-		// This complicated tangle of if-statements handles the pipe updating operations.
-		// One statement for each end tile (if it it not an and tile then advance tile)
-		// A is Below, B is Left, C is Right, and D is Above
-		if(ctile==4||ctile==20||ctile==28||ctile==68||ctile==76){					//----===## A ##===----
-				cpyd=1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				if(ntile==1||ntile==33||ntile==41||ntile==65||ntile==73){     // Normal tile - do nothing - let engine continue filling pipes
-				}else if(ntile==49){ 		                                      // Tile that needs to flip direction
-						ntile=65;
-				}else{
-					// Game over!
-					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER A %d",ntile);
+		if(state==1){
+			// Main Game State
+				// Update Timer	
+				ClockCounter++;
+				if(((ClockCounter%ClockSpeed)==0)&&StartTimer>0) StartTimer--;	
+
+				// Simple float code
+				unsigned char ctile=tilemap[(cpy*ENGINE_TILEMAPWIDTH)+cpx];
+
+				// Tile delta
+				int cpxd=0;
+				int cpyd=0;
+				unsigned char ntile=0;
+
+				if(StartTimer==0){
+						// This complicated tangle of if-statements handles the pipe updating operations.
+						// One statement for each end tile (if it it not an and tile then advance tile)
+						// A is Below, B is Left, C is Right, and D is Above
+						if(ctile==4||ctile==20||ctile==28||ctile==68||ctile==76){					//----===## A ##===----
+								cpyd=1;
+								ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+								if(ntile==1||ntile==33||ntile==41||ntile==65||ntile==73){     // Normal tile - do nothing - let engine continue filling pipes
+								}else if(ntile==49){ 		                                      // Tile that needs to flip direction
+										ntile=65;
+								}else{
+									// Game over!
+									// APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER A %d",ntile);
+								}
+								tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+						}else if(ctile==16||ctile==32||ctile==44||ctile==56||ctile==64){	//----===## B ##===----
+								cpxd=-1;
+								ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+								if(ntile==13||ntile==17||ntile==37||ntile==53||ntile==61){    // Normal tile - do nothing - let engine continue filling pipes
+								}else if(ntile==9||ntile==33||ntile==49){                     // Tile that needs to flip direction
+										ntile+=4;
+								}else if(ntile==68||ntile==72){                               // Vertical part 
+										ntile=61;
+								}else{
+									// Game over!
+									// APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER B %d",ntile);
+								}
+								tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+						}else if(ctile==12||ctile==24||ctile==36||ctile==52||ctile==60){	//----===## C ##===----
+								cpxd=1;
+								ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+								if(ntile==9||ntile==21||ntile==33||ntile==49||ntile==57||ntile==25||ntile==49){  // Normal tile - do nothing - let engine continue filling pipes
+								}else if(ntile==41){ 		                // Tile that needs to flip direction
+										ntile=45;
+								}else if(ntile==68||ntile==72){          										// Horizontal part has been filled
+										ntile=57;
+								}else{
+									// Game over!
+									// APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER C %d",ntile);
+								}
+								tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+						}else if(ctile==8||ctile==40||ctile==48||ctile==72||ctile==80){		//----===## D ##===----
+								cpyd=-1;
+								ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
+								if(ntile==5||ntile==37||ntile==45||ntile==69||ntile==77){    // Normal tile - do nothing - let engine continue filling pipes
+								}else if(ntile==1||ntile==17||ntile==25){ 		               // Tile that needs to flip direction
+										ntile+=4;
+								}else if(ntile==49){ 		                 										// Tile that needs to flip direction
+										ntile=69;
+								}else if(ntile==52||ntile==56){          										// Horizontal part has been filled
+										ntile=77;
+								}else{
+									// Game over!
+									// APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER D %d",ntile);
+								}
+								tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
+						}else{
+								ctile ++;			
+						}
+
+						tilemap[(cpy*ENGINE_TILEMAPWIDTH)+cpx]=ctile;
+
+						// if we changed the tile
+						if(ntile>0){
+								cpx+=cpxd;
+								cpy+=cpyd;
+						}
 				}
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}else if(ctile==16||ctile==32||ctile==44||ctile==56||ctile==64){	//----===## B ##===----
-				cpxd=-1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				if(ntile==13||ntile==17||ntile==37||ntile==53||ntile==61){    // Normal tile - do nothing - let engine continue filling pipes
-				}else if(ntile==9||ntile==33||ntile==49){                     // Tile that needs to flip direction
-						ntile+=4;
-				}else if(ntile==68||ntile==72){                               // Vertical part 
-						ntile=61;
-				}else{
-					// Game over!
-					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER B %d",ntile);
-				}
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}else if(ctile==12||ctile==24||ctile==36||ctile==52||ctile==60){	//----===## C ##===----
-				cpxd=1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				if(ntile==9||ntile==21||ntile==33||ntile==49||ntile==57||ntile==25||ntile==49){  // Normal tile - do nothing - let engine continue filling pipes
-				}else if(ntile==41){ 		                // Tile that needs to flip direction
-						ntile=45;
-				}else if(ntile==68||ntile==72){          										// Horizontal part has been filled
-						ntile=57;
-				}else{
-					// Game over!
-					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER C %d",ntile);
-				}
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}else if(ctile==8||ctile==40||ctile==48||ctile==72||ctile==80){		//----===## D ##===----
-				cpyd=-1;
-				ntile=tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)];
-				if(ntile==5||ntile==37||ntile==45||ntile==69||ntile==77){    // Normal tile - do nothing - let engine continue filling pipes
-				}else if(ntile==1||ntile==17||ntile==25){ 		               // Tile that needs to flip direction
-						ntile+=4;
-				}else if(ntile==49){ 		                 										// Tile that needs to flip direction
-						ntile=69;
-				}else if(ntile==52||ntile==56){          										// Horizontal part has been filled
-						ntile=77;
-				}else{
-					// Game over!
-					APP_LOG(APP_LOG_LEVEL_DEBUG, "GAME OVER D %d",ntile);
-				}
-				tilemap[((cpy+cpyd)*ENGINE_TILEMAPWIDTH)+(cpx+cpxd)]=ntile;
-		}else{
-				ctile ++;			
+
+				// Update Graphics
+				layer_mark_dirty(s_image_layer);
 		}
-	
-		tilemap[(cpy*ENGINE_TILEMAPWIDTH)+cpx]=ctile;
-		
-		// if we changed the tile
-		if(ntile>0){
-				cpx+=cpxd;
-				cpy+=cpyd;
-		}
-	
-	  layer_mark_dirty(s_image_layer);
 
     //Register next execution
     timer = app_timer_register(delta, (AppTimerCallback) timer_callback, NULL);
@@ -397,13 +444,6 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 // Called when the graphics need to be updated
 //---------------------------------------------------------------------------------//
 
-//  graphics_context_set_compositing_mode(ctx, GCompOpSet);
-//  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-//  graphics_draw_bitmap_in_rect(ctx, s_bitmap, gbitmap_get_bounds(s_bitmap));
-// ENGINE_TILE_SIZE 18
-// ENGINE_TILE_NOX 8
-//  ENGINE_TILE_NOXH 4
-
 static void layer_update_callback(Layer *layer, GContext* ctx) {
 	
 	if(state==0){
@@ -426,7 +466,7 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 					graphics_draw_bitmap_in_rect(ctx, t_image[i+25], GRect(48,42+(i*24), 14, 24));
 			}
 			graphics_draw_bitmap_in_rect(ctx, t_image[38], GRect(0,42+(level*24), 34, 24));		
-	}else if(state>0){
+	}else if(state==1){
 			// Update Tilemap
 			int cx;
 			int cy;
@@ -471,14 +511,22 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 			graphics_draw_bitmap_in_rect(ctx, t_image[64+(StartTimer/10)], GRect(16,144, 14, 24));
 			graphics_draw_bitmap_in_rect(ctx, t_image[64+(StartTimer%10)], GRect(30,144, 14, 24));
 
-			graphics_draw_bitmap_in_rect(ctx, t_image[57], GRect(100,100, 18, 18));
-			graphics_draw_bitmap_in_rect(ctx, t_image[58], GRect(100,120, 18, 18));
+//			graphics_draw_bitmap_in_rect(ctx, t_image[50], GRect(100,100, 18, 18));
+//			graphics_draw_bitmap_in_rect(ctx, t_image[78], GRect(100,120, 18, 18));
+//			graphics_draw_bitmap_in_rect(ctx, t_image[79], GRect(100,130, 18, 18));
 		
 			// Draw current position
 			graphics_context_set_compositing_mode(ctx, GCompOpSet);
 			graphics_draw_bitmap_in_rect(ctx,p_walk, GRect((tx+pdx)*ENGINE_TILE_SIZE,(ty+pdy)*ENGINE_TILE_SIZE,18,18));
 			graphics_draw_bitmap_in_rect(ctx,p_sel, GRect(tx*ENGINE_TILE_SIZE,ty*ENGINE_TILE_SIZE,18,18));
 			graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+	}else if(state==2){
+			// Clear Screen to Black Tile
+			graphics_draw_bitmap_in_rect(ctx, t_image[32], GRect(0,0,144,168));
+
+			// Bonus Counter
+			writestring(ctx,"SCOREQ",40,100);
+
 	}
 }
 
@@ -541,17 +589,21 @@ static void main_window_load(Window *window) {
 	t_image[73]=makeSprite(s_image, GRect(9*14, 144, 14, 24));				
 	
 	// Letters that have not previously been defined
-	t_image[74]=makeSprite(s_image, GRect(9,90,9,18));					
-	t_image[75]=makeSprite(s_image, GRect(18,90,9,18));					
-	t_image[76]=makeSprite(s_image, GRect(9,108,9,18));					
-	t_image[77]=makeSprite(s_image, GRect(36,108,9,18));					
+	t_image[74]=makeSprite(s_image, GRect(9,90,9,18));					// C					
+	t_image[75]=makeSprite(s_image, GRect(9,108,9,18));					// R
+	t_image[76]=makeSprite(s_image, GRect(27,108,9,18));        // P					
+	t_image[77]=makeSprite(s_image, GRect(45,108,9,18));				// G	
+	t_image[78]=makeSprite(s_image, GRect(9,126,9,18));					// B
+	t_image[79]=makeSprite(s_image, GRect(24,126,15,18));       // M					
+	t_image[80]=makeSprite(s_image, GRect(45,126,5,18));				// I	
+	t_image[81]=makeSprite(s_image, GRect(50,126,4,18));				// !	
+	t_image[82]=makeSprite(s_image, GRect(27,126,9,18));        // V					
 	
 	// Define transparent images as p_sel and p_walk
 	p_sel=gbitmap_create_with_resource(RESOURCE_ID_PNG_TRANSP);
 	p_walk=gbitmap_create_as_sub_bitmap(p_sel,GRect(0,18,18,18));
 	
 	// Prepare for new game
-	state=1;
 	initGameBoard();
 	
 	// Prepare Timer
