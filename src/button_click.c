@@ -230,22 +230,45 @@ static void initGameBoard()
 
 	// Make the level parameters
 	if(level==0){
-			// Clock 6 - Start 99 - No Limit - Short Distance - No Obstructions
 			StartTimer=99;
 			ClockSpeed=6;
 			StartX=8+(rand()%8);
 			StartY=8+(rand()%8);
 			GoalX=12-StartX+12;
 			GoalY=12-StartY+12;
-			Obstructions=100;
+			Obstructions=0;
 	}else if(level==1){
-			// Clock 4 - Start 99 - 10 block limit - Medium Distance - 0 Obstructions								
+			StartTimer=99;
+			ClockSpeed=4;
+			StartX=6+(rand()%12);
+			StartY=6+(rand()%12);
+			GoalX=12-StartX+12;
+			GoalY=12-StartY+12;
+			Obstructions=10;
 	}else if(level==2){
-			// Clock 2 - Start 99 - 20 block limit - Long Distance - 20 Obstructions						
+			StartTimer=99;
+			ClockSpeed=2;
+			StartX=4+(rand()%16);
+			StartY=4+(rand()%16);
+			GoalX=12-StartX+12;
+			GoalY=12-StartY+12;
+			Obstructions=30;
 	}else if(level==3){
-			// Clock 1 - Start 99 - 30 block limit - Long Distance - 50 Obstructions				
+			StartTimer=50;
+			ClockSpeed=2;
+			StartX=4+(rand()%16);
+			StartY=4+(rand()%16);
+			GoalX=12-StartX+12;
+			GoalY=12-StartY+12;
+			Obstructions=60;	
 	}else if(level==4){
-			// Clock 1 - Start 50 - 40 block limit - Long Distance - 100 Obstructions		
+			StartTimer=50;
+			ClockSpeed=1;
+			StartX=4+(rand()%16);
+			StartY=4+(rand()%16);
+			GoalX=12-StartX+12;
+			GoalY=12-StartY+12;
+			Obstructions=120;
 	}
 
 	// Place Start and Goal Tiles in tilemap and move start of computation to right place
@@ -447,7 +470,10 @@ static void layer_update_callback(Layer *layer, GContext* ctx) {
 			
 			graphics_draw_bitmap_in_rect(ctx, t_image[64+(StartTimer/10)], GRect(16,144, 14, 24));
 			graphics_draw_bitmap_in_rect(ctx, t_image[64+(StartTimer%10)], GRect(30,144, 14, 24));
-	
+
+			graphics_draw_bitmap_in_rect(ctx, t_image[57], GRect(100,100, 18, 18));
+			graphics_draw_bitmap_in_rect(ctx, t_image[58], GRect(100,120, 18, 18));
+		
 			// Draw current position
 			graphics_context_set_compositing_mode(ctx, GCompOpSet);
 			graphics_draw_bitmap_in_rect(ctx,p_walk, GRect((tx+pdx)*ENGINE_TILE_SIZE,(ty+pdy)*ENGINE_TILE_SIZE,18,18));
@@ -494,7 +520,14 @@ static void main_window_load(Window *window) {
 	// ENGINE_TILE_NOX is used to count number of tiles automatically ENGINE_TILE_SIZE is used to size the tiles
 	for(int j=0;j<8;j++){		
 			for(int i=0;i<ENGINE_TILE_NOX;i++){
-					t_image[(j*ENGINE_TILE_NOX)+i] = makeSprite(s_image, GRect((i%ENGINE_TILE_SIZE)*ENGINE_TILE_SIZE, j*ENGINE_TILE_SIZE, ENGINE_TILE_SIZE, ENGINE_TILE_SIZE));			
+					int tileno=(j*ENGINE_TILE_NOX)+i;
+					
+					// Define regular tiles and high-score half-size tiles
+					if(tileno==40||tileno==48||tileno==49||tileno==50||tileno==56||tileno==57||tileno==58){
+							t_image[tileno] = makeSprite(s_image, GRect((i%ENGINE_TILE_SIZE)*ENGINE_TILE_SIZE, j*ENGINE_TILE_SIZE, 9, ENGINE_TILE_SIZE));										
+					}else{
+							t_image[tileno] = makeSprite(s_image, GRect((i%ENGINE_TILE_SIZE)*ENGINE_TILE_SIZE, j*ENGINE_TILE_SIZE, ENGINE_TILE_SIZE, ENGINE_TILE_SIZE));																	
+					}
 					
 					// Define High Score Tiles
 					if(j==0){
@@ -503,8 +536,15 @@ static void main_window_load(Window *window) {
 			}
 	}
 	
+	// Last two Numbers
 	t_image[72]=makeSprite(s_image, GRect(8*14, 144, 14, 24));				
 	t_image[73]=makeSprite(s_image, GRect(9*14, 144, 14, 24));				
+	
+	// Letters that have not previously been defined
+	t_image[74]=makeSprite(s_image, GRect(9,90,9,18));					
+	t_image[75]=makeSprite(s_image, GRect(18,90,9,18));					
+	t_image[76]=makeSprite(s_image, GRect(9,108,9,18));					
+	t_image[77]=makeSprite(s_image, GRect(36,108,9,18));					
 	
 	// Define transparent images as p_sel and p_walk
 	p_sel=gbitmap_create_with_resource(RESOURCE_ID_PNG_TRANSP);
